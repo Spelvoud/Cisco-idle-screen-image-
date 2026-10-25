@@ -22,6 +22,11 @@ const THUMB_Y = 22;
 const THUMB_W = 100;
 const THUMB_H = 56;
 
+// Overige headlines onder de thumbnail
+const HEADLINE_COUNT  = 5;
+const HEADLINE_SIZE   = 6;
+const HEADLINE_HEIGHT = 13;
+
 // TrueType-lettertypen; het eerste bestand dat bestaat wordt gebruikt.
 // Is er geen enkel lettertype beschikbaar, dan valt het script terug op de ingebouwde GD-fonts.
 const FONT_CANDIDATES = [
@@ -288,13 +293,14 @@ if ($headlines === null) {
     // Overige headlines, één regel per bericht
     $y = THUMB_Y + THUMB_H + 4;
     imageline($img, 4, $y, WIDTH - 5, $y, $colors['line']);
-    foreach ($headlines as $headline) {
-        $y += 14;
+    foreach (array_slice($headlines, 0, HEADLINE_COUNT) as $headline) {
+        $y += HEADLINE_HEIGHT;
         if ($y > HEIGHT - 3) {
             break;
         }
-        imagefilledrectangle($img, 5, $y - 6, 8, $y - 3, $colors['header']);
-        drawText($img, fitText($headline['title'], WIDTH - 18, 7.5, $font), 13, $y, 7.5, $colors['text'], $font);
+        imagefilledrectangle($img, 4, $y - 5, 6, $y - 3, $colors['header']);
+        $title = fitText($headline['title'], WIDTH - 14, HEADLINE_SIZE, $font);
+        drawText($img, $title, 10, $y, HEADLINE_SIZE, $colors['text'], $font);
     }
 }
 
