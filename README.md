@@ -40,5 +40,10 @@ Via de HTTP-header `Refresh: 600` haalt de telefoon de service elke 10 minuten o
   - **Idle Timer**: bijv. `60` (seconden zonder bediening voordat het idle screen verschijnt)
 - Commandline: `php nos.php [uitvoer.png]` schrijft een bestand (standaard `nos.png`).
 
+Er is ook een versie **doorlopend**: daarin staan minder headlines onder de foto (zoveel als er passen,
+meestal 3), in een iets groter lettertype en over maximaal twee regels, zodat ze niet worden afgekapt.
+Gebruik daarvoor als Idle URL `http://server/pad/nos-idle.php?versie=doorlopend`
+(of `php nos.php uitvoer.png doorlopend` op de commandline).
+
 Vereist PHP 7.4+ met GD (met FreeType en JPEG-ondersteuning), SimpleXML, mbstring en curl of `allow_url_fopen`.
 Lettertype: DejaVu Sans (regular en bold); zet eventueel `fonts/DejaVuSans.ttf` en `fonts/DejaVuSans-Bold.ttf` naast het script.
