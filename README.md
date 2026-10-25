@@ -8,7 +8,14 @@ Weerdata: [Open-Meteo](https://open-meteo.com) (gratis, geen API-sleutel).
 
 ## Gebruik
 
-- Webserver: `http://server/weather.php` geeft direct de PNG terug (bijv. als idle-URL van de telefoon).
+`weather-idle.php` is de Cisco IP Phone XML-service (`CiscoIPPhoneImageFile`) die deze PNG op de telefoon toont.
+Via de HTTP-header `Refresh: 600` haalt de telefoon de service elke 10 minuten opnieuw op.
+
+- Zet `weather.php` en `weather-idle.php` samen in één map op de webserver.
+- Stel op de telefoon of in CUCM bij het toestel in:
+  - **Idle URL**: `http://server/pad/weather-idle.php` (niet `weather.php`: de telefoon verwacht XML,
+    een losse PNG geeft de fout "HTTP-inhoudstype niet ondersteund")
+  - **Idle Timer**: bijv. `60`
 - Commandline: `php weather.php [uitvoer.png]` schrijft een bestand (standaard `weather.png`).
 
 Vereist PHP 7.4+ met de GD-extensie (met FreeType) en curl of `allow_url_fopen`.
