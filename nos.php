@@ -8,6 +8,10 @@
  *   - via de commandline: php nos.php [uitvoer.png]  -> schrijft een bestand
  *                                                     (standaard nos.png)
  *
+ * Versie "doorlopend" (http://server/nos.php?versie=doorlopend of
+ * php nos.php uitvoer.png doorlopend): minder headlines onder de foto,
+ * die over maximaal twee regels doorlopen in plaats van te worden afgekapt.
+ *
  * Nieuws komt uit de openbare RSS-feed van de NOS. Bij het eerste bericht
  * wordt de bijbehorende foto als thumbnail getoond.
  */
@@ -26,6 +30,12 @@ const THUMB_H = 56;
 const HEADLINE_COUNT  = 5;
 const HEADLINE_SIZE   = 6;
 const HEADLINE_HEIGHT = 13;
+
+// Versie "doorlopend": headlines over meerdere regels
+const WRAP_LINES       = 2;
+const WRAP_SIZE        = 7;
+const WRAP_LINE_HEIGHT = 11;
+const WRAP_GAP         = 4;
 
 // TrueType-lettertypen; het eerste bestand dat bestaat wordt gebruikt.
 // Is er geen enkel lettertype beschikbaar, dan valt het script terug op de ingebouwde GD-fonts.
@@ -250,6 +260,9 @@ function drawThumbnail($img, ?string $url): bool
 
 date_default_timezone_set('Europe/Amsterdam');
 
+$version = PHP_SAPI === 'cli' ? ($argv[2] ?? '') : ($_GET['versie'] ?? '');
+$wrapHeadlines = $version === 'doorlopend';
+
 $headlines = fetchHeadlines();
 
 // Truecolor, zodat de foto er goed uitziet
@@ -290,17 +303,35 @@ if ($headlines === null) {
         drawText($img, $line, $textX, THUMB_Y + 10 + $i * 14, 8.5, $colors['text'], $fontBold);
     }
 
-    // Overige headlines, één regel per bericht
     $y = THUMB_Y + THUMB_H + 4;
     imageline($img, 4, $y, WIDTH - 5, $y, $colors['line']);
-    foreach (array_slice($headlines, 0, HEADLINE_COUNT) as $headline) {
-        $y += HEADLINE_HEIGHT;
-        if ($y > HEIGHT - 3) {
-            break;
+
+    if ($wrapHeadlines) {
+        // Overige headlines over maximaal WRAP_LINES regels, zolang ze volledig passen
+        $y += WRAP_GAP - 1;
+        foreach ($headlines as $headline) {
+            $lines = wrapText($headline['title'], WIDTH - 14, WRAP_LINES, WRAP_SIZE, $font);
+            if ($y + count($lines) * WRAP_LINE_HEIGHT > HEIGHT - 1) {
+                break;
+            }
+            imagefilledrectangle($img, 4, $y + WRAP_LINE_HEIGHT - 6, 6, $y + WRAP_LINE_HEIGHT - 4, $colors['header']);
+            foreach ($lines as $line) {
+                $y += WRAP_LINE_HEIGHT;
+                drawText($img, $line, 10, $y, WRAP_SIZE, $colors['text'], $font);
+            }
+            $y += WRAP_GAP;
         }
-        imagefilledrectangle($img, 4, $y - 5, 6, $y - 3, $colors['header']);
-        $title = fitText($headline['title'], WIDTH - 14, HEADLINE_SIZE, $font);
-        drawText($img, $title, 10, $y, HEADLINE_SIZE, $colors['text'], $font);
+    } else {
+        // Overige headlines, één regel per bericht
+        foreach (array_slice($headlines, 0, HEADLINE_COUNT) as $headline) {
+            $y += HEADLINE_HEIGHT;
+            if ($y > HEIGHT - 3) {
+                break;
+            }
+            imagefilledrectangle($img, 4, $y - 5, 6, $y - 3, $colors['header']);
+            $title = fitText($headline['title'], WIDTH - 14, HEADLINE_SIZE, $font);
+            drawText($img, $title, 10, $y, HEADLINE_SIZE, $colors['text'], $font);
+        }
     }
 }
 

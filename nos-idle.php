@@ -4,6 +4,7 @@
  *
  * Stel op de telefoon (of in CUCM bij het toestel) in:
  *   Idle URL:   http://server/pad/nos-idle.php
+ *               (of http://server/pad/nos-idle.php?versie=doorlopend voor doorlopende koppen)
  *   Idle Timer: bijv. 60 seconden
  *
  * Het antwoord is een CiscoIPPhoneImageFile-object dat de PNG van 298x156 toont.
@@ -20,9 +21,12 @@ $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' :
 $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $base   = $scheme . '://' . $host . rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
 
-$selfUrl  = $base . '/nos-idle.php';
+// Versie "doorlopend" (nos-idle.php?versie=doorlopend) wordt doorgegeven aan nos.php
+$version = ($_GET['versie'] ?? '') === 'doorlopend' ? ['versie' => 'doorlopend'] : [];
+
+$selfUrl  = $base . '/nos-idle.php' . ($version ? '?' . http_build_query($version) : '');
 // Tijdstempel in de URL voorkomt dat de telefoon een oude afbeelding uit de cache toont
-$imageUrl = $base . '/nos.php?t=' . time();
+$imageUrl = $base . '/nos.php?' . http_build_query($version + ['t' => time()]);
 
 header('Content-Type: text/xml; charset=utf-8');
 header('Cache-Control: no-cache, max-age=0');
