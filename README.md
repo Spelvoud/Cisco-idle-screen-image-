@@ -42,3 +42,37 @@ Via de HTTP-header `Refresh: 600` haalt de telefoon de service elke 10 minuten o
 
 Vereist PHP 7.4+ met GD (met FreeType en JPEG-ondersteuning), SimpleXML, mbstring en curl of `allow_url_fopen`.
 Lettertype: DejaVu Sans (regular en bold); zet eventueel `fonts/DejaVuSans.ttf` en `fonts/DejaVuSans-Bold.ttf` naast het script.
+
+# Visual voicemail – Cisco 8865
+
+`voicemail.php` emuleert visual voicemail op Cisco IP-telefoons (o.a. 8865) met de Cisco IP Phone XML-services.
+De berichten komen uit de voicemail-spool van Asterisk / FreePBX
+(`/var/spool/asterisk/voicemail/<context>/<mailbox>/INBOX` en `Old`).
+
+- **Inloggen**: mailbox + pincode (uit `voicemail.conf`), of automatisch voor vertrouwde toestellen (`trusted`: IP => mailbox).
+- **Lijst** (`CiscoIPPhoneMenu`): alle berichten, nieuwste eerst; nieuwe berichten zijn gemarkeerd met `*`.
+- **Details** (`CiscoIPPhoneText`): naam, nummer, datum, duur, met softkeys *Afspelen*, *Bellen* (terugbellen), *Wissen* en *Terug*.
+- Na afspelen gaat een bericht van `INBOX` naar `Old`; wissen vraagt om bevestiging. Berichten worden daarna aaneengesloten
+  hernummerd (zoals Asterisk verwacht) en via AMI `VoicemailRefresh` wordt het MWI-lampje bijgewerkt.
+
+## Afspelen
+
+- `playback => 'ami'` (standaard): Asterisk belt het toestel via de Manager Interface (`Originate` + `Playback`).
+  Neem op en het bericht wordt afgespeeld. Maak in `manager.conf` een gebruiker aan met `read/write = originate,call,system`.
+- `playback => 'rtp'`: de server pusht `RTPRx:<telefoon>:<poort>` naar `http://<telefoon>/CGI/Execute` en streamt het bericht
+  met `ffmpeg` als G.711 µ-law RTP naar het toestel. Vereist een push-gebruiker (CUCM: gebruiker gekoppeld aan het toestel,
+  *Authentication URL* ingesteld) en `ffmpeg` op de server.
+
+## Gebruik
+
+- Zet `voicemail.php` op een webserver die bij de voicemail-spool kan (lees- én schrijfrechten voor de webserver-gebruiker,
+  bijv. door die in de groep `asterisk` te zetten).
+- Pas de configuratie bovenin aan, of zet de instellingen in `voicemail-config.php`:
+  ```php
+  <?php return ['secret' => 'lang-willekeurig-geheim', 'context' => 'default',
+                'ami' => ['username' => 'visualvm', 'secret' => '...', 'channel' => 'PJSIP/{mailbox}']];
+  ```
+- Voeg in CUCM een IP Phone Service toe met URL `http://server/pad/voicemail.php` (of `...?mb=100` om de mailbox vast te zetten)
+  en koppel die eventueel aan de *Messages*-knop van het toestel.
+
+Vereist PHP 7.4+ met curl (voor `rtp`) en eventueel posix.
