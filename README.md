@@ -11,6 +11,10 @@ Weerdata: [Open-Meteo](https://open-meteo.com) (gratis, geen API-sleutel).
 `weather-idle.php` is de Cisco IP Phone XML-service (`CiscoIPPhoneImageFile`) die deze PNG op de telefoon toont.
 Via de HTTP-header `Refresh: 600` haalt de telefoon de service elke 10 minuten opnieuw op.
 
+**Efteling-thema:** een sprookjesachtige variant met sterrenhemel, gouden sierlijst, kasteel en rood-witte
+paddenstoelen. Kies het met `weather-idle.php?theme=efteling` (of `weather.php?theme=efteling`,
+op de commandline `php weather.php uitvoer.png efteling`). Gebruikt DejaVu Serif Bold als lettertype.
+
 - Zet `weather.php` en `weather-idle.php` samen in één map op de webserver.
 - Stel op de telefoon of in CUCM bij het toestel in:
   - **Idle URL**: `http://server/pad/weather-idle.php` (niet `weather.php`: de telefoon verwacht XML,
